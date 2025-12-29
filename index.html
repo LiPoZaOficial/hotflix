@@ -1,0 +1,182 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HOTFLIX - Premium Content</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #050505;
+            color: #ffffff;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        .text-glow-red {
+            text-shadow: 0 0 30px rgba(229, 9, 20, 0.5);
+        }
+
+        .bg-red-main { background-color: #e50914; }
+        .border-red-main { border-color: #e50914; }
+        .text-red-main { color: #e50914; }
+
+        @keyframes pulse-custom {
+            0%, 100% { transform: scale(1); opacity: 1; box-shadow: 0 0 0px rgba(229, 9, 20, 0); }
+            50% { transform: scale(1.05); opacity: 0.9; box-shadow: 0 0 15px rgba(229, 9, 20, 0.4); }
+        }
+
+        .animate-pulse-red {
+            animation: pulse-custom 2s infinite ease-in-out;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #0a0a0a; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #e50914; }
+
+        .italic-title { font-style: italic; }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.34.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="custom-scrollbar">
+
+    <!-- Fundo de ambiência -->
+    <div class="fixed inset-0 pointer-events-none opacity-20 bg-[radial-gradient(circle_at_50%_-20%,_#e5091433_0%,_transparent_70%)] z-0"></div>
+
+    <!-- Cabeçalho -->
+    <header class="relative z-10 py-20 md:py-32 flex flex-col items-center justify-center text-center px-4">
+        <div class="group relative inline-flex items-center gap-4">
+            <h1 id="displaySiteName" class="text-7xl md:text-9xl font-black tracking-tight text-glow-red bg-gradient-to-b from-white to-[#e50914] bg-clip-text text-transparent italic-title pr-10 py-2">
+                HOTFLIX
+            </h1>
+        </div>
+        <div class="mt-4 flex items-center gap-3 group">
+            <p id="displaySubtitle" class="text-xs md:text-sm text-red-main font-black tracking-[0.5em] uppercase opacity-80">
+                CONTEÚDO PRIVADO & EXCLUSIVO
+            </p>
+        </div>
+    </header>
+
+    <!-- Grade de Conteúdo -->
+    <main class="relative z-10 flex-1 px-4 md:px-20 pb-40">
+        <div id="contentGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 md:gap-10">
+            <!-- Cards gerados via JS -->
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="relative z-10 py-16 border-t border-white/5 flex flex-col items-center bg-black">
+        <p id="footerText" class="text-[10px] text-gray-600 font-black tracking-[0.5em] uppercase">
+            © 2024 HOTFLIX PRIVATE • LUXURY EXPERIENCE
+        </p>
+    </footer>
+
+    <script>
+        // Estado inicial (Apenas visualização)
+        let state = {
+            siteName: "HOTFLIX",
+            subtitle: "CONTEÚDO PRIVADO & EXCLUSIVO",
+            cards: [
+                { id: 1, name: "Amanda S.", category: "EXCLUSIVO", videos: 24, url: "#", image: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=800&auto=format&fit=crop" },
+                { id: 2, name: "Bruna W.", category: "EXCLUSIVO", videos: 18, url: "#", image: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800&auto=format&fit=crop" },
+                { id: 3, name: "Carla M.", category: "EXCLUSIVO", videos: 42, url: "#", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=800&auto=format&fit=crop" },
+                { id: 4, name: "Daniella L.", category: "EXCLUSIVO", videos: 15, url: "#", image: "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?q=80&w=800&auto=format&fit=crop" },
+                { id: 5, name: "Evelyn K.", category: "EXCLUSIVO", videos: 31, url: "#", image: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=800&auto=format&fit=crop" },
+                { id: 6, name: "Fernanda G.", category: "EXCLUSIVO", videos: 10, url: "#", image: "https://images.unsplash.com/photo-1502673530728-f79b4cab31b1?q=80&w=800&auto=format&fit=crop" }
+            ]
+        };
+
+        // Carregar do LocalStorage (Caso o usuário tenha editado anteriormente, mas agora sem controles de admin)
+        function loadStorage() {
+            const saved = localStorage.getItem('hotflix_v1_data');
+            if (saved) {
+                const savedData = JSON.parse(saved);
+                state.siteName = savedData.siteName || state.siteName;
+                state.subtitle = savedData.subtitle || state.subtitle;
+                // Só carrega os cards se eles tiverem dados novos, senão mantém os novos iniciais com imagens
+                if (savedData.cards && savedData.cards.length > 0 && savedData.cards[0].image) {
+                   state.cards = savedData.cards;
+                }
+            }
+            render();
+        }
+
+        // Renderização
+        function render() {
+            document.getElementById('displaySiteName').innerText = state.siteName;
+            document.getElementById('displaySubtitle').innerText = state.subtitle;
+            document.getElementById('footerText').innerText = `© 2024 ${state.siteName} PRIVATE • LUXURY EXPERIENCE`;
+
+            const grid = document.getElementById('contentGrid');
+            grid.innerHTML = '';
+
+            state.cards.forEach(card => {
+                const cardEl = document.createElement('div');
+                cardEl.className = "flex flex-col gap-4";
+                cardEl.innerHTML = `
+                    <div onclick="handleAction(${card.id})" class="group relative aspect-[9/16] bg-zinc-900 rounded-2xl border border-white/5 hover:border-red-main/50 hover:shadow-[0_0_50px_rgba(229,9,20,0.3)] hover:-translate-y-2 transition-all duration-700 overflow-hidden cursor-pointer">
+                        <!-- Imagem -->
+                        <div class="absolute inset-0 z-0">
+                            ${card.image ? `<img src="${card.image}" class="w-full h-full object-cover transition-transform duration-[2000ms] group-hover:scale-110">` : `<div class="w-full h-full flex items-center justify-center"><i class="fa-solid fa-video text-4xl opacity-10 text-red-main"></i></div>`}
+                            <div class="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
+                        </div>
+
+                        <!-- Badge Pulsante -->
+                        <div class="absolute top-4 left-4 z-20 flex items-center gap-1.5 px-2.5 py-1 bg-black/60 backdrop-blur-md rounded-full border border-white/10 animate-pulse-red">
+                            <i class="fa-solid fa-video text-[10px] text-red-main"></i>
+                            <span class="text-[9px] font-black text-white">${card.videos} VÍDEOS</span>
+                        </div>
+
+                        <!-- Conteúdo -->
+                        <div class="absolute inset-0 flex flex-col justify-end p-5 z-10 pointer-events-none">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="px-2 py-0.5 bg-red-main text-[7px] font-black text-white rounded-md tracking-widest uppercase">
+                                    ${card.category}
+                                </span>
+                            </div>
+                            <h3 class="text-lg font-black text-white leading-tight uppercase tracking-tighter drop-shadow-lg">
+                                ${card.name}
+                            </h3>
+                        </div>
+                    </div>
+
+                    <!-- Botão de Ação -->
+                    <button onclick="handleAction(${card.id})" class="w-full bg-gradient-to-r from-red-700 to-red-600 text-white py-4 rounded-xl flex items-center justify-center shadow-lg transition-all hover:brightness-110 active:scale-95 group">
+                        <span class="text-[10px] font-black uppercase tracking-[0.2em] group-hover:tracking-[0.3em] transition-all">ACESSE AGORA</span>
+                    </button>
+                `;
+                grid.appendChild(cardEl);
+            });
+        }
+
+        function handleAction(id) {
+            const card = state.cards.find(c => c.id === id);
+            if (card.url && card.url !== "#") {
+                window.open(card.url, '_blank');
+            } else {
+                alert("Este conteúdo ainda está sendo preparado.");
+            }
+        }
+
+        // Iniciar
+        window.onload = loadStorage;
+    </script>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>
